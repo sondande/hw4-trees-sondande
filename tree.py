@@ -9,26 +9,68 @@ import sys
 import numpy as np
 import pandas as pd
 
-# calculate getEntropy
-def getEntropy(training_set, uniqueLabels):
-    rows = training_set.shape[0]
-    class_entropy = 0
+# calculate total entropy of the whole dataset
+def totalEntropy(attribute_value_data, training_set, uniqueLabels):
+    #value, counts = np.unique(labels, return_counts=True)
+    #print(f"value: {value}, counts: {counts}")
+    num_rows = training_set.shape[0]
+    entropy = 0
     total_entropy = 0
     for label in uniqueLabels:
         #print(label)
         count_l = 0
-        for insta_count in range(rows):
+        for insta_count in range(num_rows):
             if training_set[insta_count][0] == label:
                 count_l += 1
+        if count_l != 0:
+            probability = count_l / num_rows
+            entropy = - (probability * np.log2(probability))
         #print(f"count of category:{count_l} and category is{label}")
-        class_entropy = - (count_l/rows) * np.log2(count_l/rows)
         #print("class entropy is: ", class_entropy)
-        total_entropy += class_entropy
+        total_entropy += entropy
         #print("total entropy is: ", total_entropy)
 
     return total_entropy
+# create Sv i.e, for attribute Outlook, create Ssunny, Srainy, Swindy with attributes and labels
+# get the count of each Sv and store it for further use in entropy function that will be called within information gain
+def createSv(value_list, training_set,attribute):
+    Sv = {}
+    count = 0               # get the number of occurrences/count of that value
+    listofvalues = []
+    for value in value_list:
+        print(value)
+        for key in myDict[attribute]:
+            # print(key)
+            if value == key:
+                print(value)
+                #do something lol my brain melted
+        # listofvalues.append(value)
+        # Sv[value] = listofvalues
+    for key, value in Sv.items():
+        print(f"key:{key},values:{value}")
+
+    return Sv, count
 
 # calculate information gain
+def informationGain(myDict, attribute, training_set, uniqueLabels):
+    num_rows = training_set.shape[0]
+    att_info = 0.0
+    # get unique values of a specific attribute from the dictionary, this is important Sv
+    value_list = set()
+    for key in myDict[attribute]:
+        #print(key)
+        value_list.add(key)
+        #for value in key:
+         #   print(value)
+    value_list = list(value_list)
+    print(f"attribute: {attribute},unique values of attribute: {value_list}")
+    Sv,count = createSv(value_list, training_set, attribute)
+    for att in attributes:                   # for every value in attributes:
+        att_entropy = totalEntropy(training_set, uniqueLabels)              # calculate class entropy for this attribute
+        probability = count/num_rows                                         # probability = count/num_rows
+        att_info += probability * att_entropy                                   # info gain += probability * entropy
+    new_entropy = totalEntropy(training_set,uniqueLabels)                   # call total entropy - info gain
+    return new_entropy                                                            # return this value
 
 # get feature max info
 
@@ -78,6 +120,14 @@ try:
     df = pd.read_csv(file_path)
     # labels = df.iloc[:, 0]
 
+    attributes = (df.columns[1:]).to_numpy()          #get the features aside from the label in column[0]
+    print(f"features of the dataset:{attributes}")            #this is important in calculating class entropy
+
+    myDict = df.to_dict('list')           #create a dictionary with aatribute names as keys and associated data as values
+
+    #for key,value in myDict.items():
+        #print(f"key:{key},values:{value}")
+
     # shuffle the dataframe. Use random seed from input and fraction 1 as we want the whole dataframe
     shuffled_df = df.sample(frac=1, random_state=randomSeed)
 
@@ -100,7 +150,10 @@ try:
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
 
-    getEntropy(training_set, uniqueLabels)
+    totalEntropy(training_set, uniqueLabels)
+
+    #for attribute in attributes:
+    informationGain(myDict,attributes[0],training_set, uniqueLabels)
 
 
 except IndexError as e:
