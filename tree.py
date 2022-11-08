@@ -10,46 +10,57 @@ import numpy as np
 import pandas as pd
 
 # calculate total entropy of the whole dataset
-def totalEntropy(attribute_value_data, training_set, uniqueLabels):
-    #value, counts = np.unique(labels, return_counts=True)
+def totalEntropy(training_set, uniqueLabels):
+    #value, counts = np.unique(attribute, return_counts=True)
     #print(f"value: {value}, counts: {counts}")
     num_rows = training_set.shape[0]
     entropy = 0
     total_entropy = 0
-    for label in uniqueLabels:
+    for label in uniqueLabels:                                  #for every label in possible unique labels, i.e. yes/no for play tennis (the decision)
         #print(label)
         count_l = 0
-        for insta_count in range(num_rows):
-            if training_set[insta_count][0] == label:
-                count_l += 1
-        if count_l != 0:
-            probability = count_l / num_rows
-            entropy = - (probability * np.log2(probability))
+        for insta_count in range(num_rows):                         #for every instance
+            if training_set[insta_count][0] == label:                   #if the label of the instance matches the possible label we're looking at
+                count_l += 1                                                #increment count by 1
+        if count_l != 0:                                            #if there are occurrences of this label
+            probability = count_l / num_rows                            #calculate the probability of it occurring
+            entropy = - (probability * np.log2(probability))                #get entropy of the label
         #print(f"count of category:{count_l} and category is{label}")
         #print("class entropy is: ", class_entropy)
-        total_entropy += entropy
+        total_entropy += entropy                                    #add to the total entropy
         #print("total entropy is: ", total_entropy)
 
     return total_entropy
+
+def classEntropy(count, totalrows):
+    class_entropy = 0
+    class_count = count
+    totalrows = totalrows
+    if class_count != 0:
+        probability = class_count / totalrows
+        class_entropy= - (probability * np.log2(probability))
+    return class_entropy
+
 # create Sv i.e, for attribute Outlook, create Ssunny, Srainy, Swindy with attributes and labels
 # get the count of each Sv and store it for further use in entropy function that will be called within information gain
 def createSv(value_list, training_set,attribute):
     Sv = {}
-    count = 0               # get the number of occurrences/count of that value
-    listofvalues = []
+    #count = 0               # get the number of occurrences/count of that value
     for value in value_list:
-        print(value)
+        listofvalues = []
+        print("value:",value)
         for key in myDict[attribute]:
-            # print(key)
+            print("key:",key)
             if value == key:
-                print(value)
+                print("listvalue:",value)
+                listofvalues.append(value)
                 #do something lol my brain melted
         # listofvalues.append(value)
-        # Sv[value] = listofvalues
+        Sv[value] = listofvalues
     for key, value in Sv.items():
         print(f"key:{key},values:{value}")
-
-    return Sv, count
+        #print(key, len([item for item in value if item]))
+    return Sv
 
 # calculate information gain
 def informationGain(myDict, attribute, training_set, uniqueLabels):
@@ -57,19 +68,24 @@ def informationGain(myDict, attribute, training_set, uniqueLabels):
     att_info = 0.0
     # get unique values of a specific attribute from the dictionary, this is important Sv
     value_list = set()
-    for key in myDict[attribute]:
+    for key in myDict[attribute]:           #create a value_list for possible labels of attribute, rainy,sunny,windy for Outlook
         #print(key)
         value_list.add(key)
         #for value in key:
          #   print(value)
     value_list = list(value_list)
     print(f"attribute: {attribute},unique values of attribute: {value_list}")
-    Sv,count = createSv(value_list, training_set, attribute)
-    for att in attributes:                   # for every value in attributes:
-        att_entropy = totalEntropy(training_set, uniqueLabels)              # calculate class entropy for this attribute
+    Sv = createSv(value_list, training_set, attribute)              #partition Outlook into its labels
+    for key, value in Sv.items():               # for every label in attribute:
+        count = len([item for item in value if item])           #get the number of values of each class in Sv, i.e. Ssunny length
+        print(f"count{count}")
+        print(f"Sv[key]{Sv[key]}")
+        shapeofSv = sum([len(Sv[x]) for x in Sv if isinstance(Sv[x], list)])            #get the number of instances/values in Sv => total rows of Outlook
+        print(f"Sv shape 0: {shapeofSv}")
+        att_entropy = classEntropy(Sv[key], count, shapeofSv)              # calculate class entropy for this attribute
         probability = count/num_rows                                         # probability = count/num_rows
         att_info += probability * att_entropy                                   # info gain += probability * entropy
-    new_entropy = totalEntropy(training_set,uniqueLabels)                   # call total entropy - info gain
+    new_entropy = totalEntropy(training_set,uniqueLabels) - att_info                # call total entropy - info gain
     return new_entropy                                                            # return this value
 
 # get feature max info
@@ -150,6 +166,7 @@ try:
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
 
+    print(f"attribute and values:{myDict[attributes[0]]}")
     totalEntropy(training_set, uniqueLabels)
 
     #for attribute in attributes:
