@@ -24,7 +24,7 @@ def totalEntropy(training_set, uniqueLabels):
                 count_l += 1                                                #increment count by 1
         if count_l != 0:                                            #if there are occurrences of this label
             probability = count_l / num_rows                            #calculate the probability of it occurring
-            entropy = - (probability * np.log2(probability))                #get entropy of the label
+            entropy = -1 * (probability * np.log2(probability))                #get entropy of the label
         #print(f"count of category:{count_l} and category is{label}")
         #print("class entropy is: ", class_entropy)
         total_entropy += entropy                                    #add to the total entropy
@@ -82,12 +82,58 @@ def informationGain(myDict, attribute, training_set, uniqueLabels):
         print(f"Sv[key]{Sv[key]}")
         shapeofSv = sum([len(Sv[x]) for x in Sv if isinstance(Sv[x], list)])            #get the number of instances/values in Sv => total rows of Outlook
         print(f"Sv shape 0: {shapeofSv}")
-        att_entropy = classEntropy(Sv[key], count, shapeofSv)              # calculate class entropy for this attribute
+        # att_entropy = classEntropy(Sv[key], count, shapeofSv)              # calculate class entropy for this attribute
+        att_entropy = classEntropy(count, shapeofSv)
         probability = count/num_rows                                         # probability = count/num_rows
         att_info += probability * att_entropy                                   # info gain += probability * entropy
     new_entropy = totalEntropy(training_set,uniqueLabels) - att_info                # call total entropy - info gain
     return new_entropy                                                            # return this value
 
+"""
+Function used to check an instance of the training set and tell you either the most common value and if it is the only only label in that instance of the training set
+"""
+def labels_check(S):
+    count = {}
+    for inst in S:
+        if inst[0] in count:
+            count[inst[0]] += 1
+        else:
+            count[inst[0]] = 1
+    # N = max(S, key=S.count)
+    max_value = max(count, key=count.get)
+    if len(count.keys()) == 1:
+        return True, max_value
+    else:
+        return False, max_value
+"""
+Inputs: 
+    A = attributes not appearing earlier in tree
+    S = subset of training instances to learn from 
+Output: 
+    tree node N classifying S
+"""
+def ID3(A, S):
+    # if A is empty then
+    if len(A) == 0:
+        # N <- leaf node with most common label y in S
+        # TODO implement with leaf node
+        most_common_label = labels_check(S)[1]
+    # else if all instances in S have the same label y then
+    elif labels_check(S)[0]:
+        leaf_node = labels_check(S)[1]
+        # N <- leaf node with label y
+    # else
+    else:
+        a_star = informationGain(myDict, A, S, uniqueLabels)
+        # a* <- argmax_(a in A) in A Gain(S, a)
+        # N <- non-leaf node with attribute a*
+        # for each possible value v of a* do
+            # S_v <- {x from S | x_{a*} = v
+            # if S_v is empty then
+                # N.child_v <- leaf node with most common label y in S
+            # else
+                # N.child_v <- ID3(A \ {a*}, S_v)
+    return N
 # get feature max info
 
 #id3
@@ -108,7 +154,7 @@ try:
     training_set_percent = float(sys.argv[2])
 
     # Ensure training set percent is a valid percent that can be used
-    if 0 >= training_set_percent or training_set_percent >= 1:
+    if 0 >= training_set_percent or training_set_percent > 1:
         print("Invalid percent. Please choose a value between 0 and 1.\n Input can not be 0 or 1 as well")
         exit(1)
 
@@ -134,15 +180,16 @@ try:
 
     # Read in dataset
     df = pd.read_csv(file_path)
-    # labels = df.iloc[:, 0]
 
     attributes = (df.columns[1:]).to_numpy()          #get the features aside from the label in column[0]
     print(f"features of the dataset:{attributes}")            #this is important in calculating class entropy
 
-    myDict = df.to_dict('list')           #create a dictionary with aatribute names as keys and associated data as values
+    # create a dictionary with attribute names as keys and associated data as values
+    myDict = df.to_dict('list')
 
-    #for key,value in myDict.items():
-        #print(f"key:{key},values:{value}")
+    # Cast each list of values in the dictionary as a set so that we only have unique values
+    for value in myDict.keys():
+        myDict[value] = set(myDict[value])
 
     # shuffle the dataframe. Use random seed from input and fraction 1 as we want the whole dataframe
     shuffled_df = df.sample(frac=1, random_state=randomSeed)
@@ -157,6 +204,8 @@ try:
     print(f"Length of training: {len(training_set)}")
     print(f"Length of testing: {len(testing_set)}\n")
 
+    # uniqueLabels = training_set["label"].unique()
+
     training_set = training_set.to_numpy()
     testing_set = testing_set.to_numpy()
 
@@ -166,13 +215,17 @@ try:
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
 
-    print(f"attribute and values:{myDict[attributes[0]]}")
-    totalEntropy(training_set, uniqueLabels)
+    # print(f"attribute and values:{myDict[attributes[0]]}")
+    # totalE = totalEntropy(training_set, uniqueLabels)
+    # print(f"Total Entropy of Training Set: {totalE}")
+    #
+    for attribute in attributes:
+        information = informationGain(myDict,attributes[0],training_set, uniqueLabels)
+        print(f"Attribute: {attribute}, Gained Information: {information}")
+    # print(f"New Information gained from Training Set: {information}")
 
-    #for attribute in attributes:
-    informationGain(myDict,attributes[0],training_set, uniqueLabels)
-
-
+    # TODO Implement ID3 into the program and create small functions that can be used in the ID3
+    ID3(["hat"], training_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
