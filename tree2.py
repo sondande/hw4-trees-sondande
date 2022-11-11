@@ -9,6 +9,13 @@ import sys
 import numpy as np
 import pandas as pd
 
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.children = []
+        # Only is 1 if it is a leaf.
+        self.leaf = 0
+
 """
 Calculate total entropy of the whole dataset
 """
@@ -40,14 +47,18 @@ def totalEntropy(data_set, output_labels):
     return -1 * total_entropy
 
 """
-Create a Sv that is using an attribute of the dataset as the root node and partitioning through the dataset for values that 
+Create a Sv that is using an attribute of the dataset as the root node and partitioning through the dataset for values that. Used for information gain 
 """
 # TODO adapt this to partition using an Sv created. Like for Sv of outlook, can it make an Sv for temperature of that Sv
-def createSv(value_list, training_set, attribute):
+def createSv(value_list, training_set, attribute, attribute_list):
     # create a dictionary of the subsets for S with it's attributes
     # Ex: if the attribute is Outlook, create Ssunny, Srainy, Swindy with attributes and labels
     Sv = {}
-    attribute_index_in_training = np.where(attributes == attribute)[0][0]
+    if attribute in attribute_list:
+        attribute_index_in_training = attributes.index(attribute)
+    else:
+        # If the attribute doesn't exist, return an empty dictionary to maintain data structure format
+        return {}
     for value in value_list:
         listofvalues = []
         # print("value:",value)
@@ -59,8 +70,9 @@ def createSv(value_list, training_set, attribute):
         Sv[value] = listofvalues
     return Sv
 
+
 # calculate information gain
-def informationGain(myDict, attribute, data_set, uniqueLabels):
+def informationGain(data_set, attribute, list_A):
     num_instances = len(data_set)
     att_info = 0.0
     # get unique values of a specific attribute from the dictionary, this is important Sv
@@ -68,9 +80,8 @@ def informationGain(myDict, attribute, data_set, uniqueLabels):
     for key in myDict[attribute]:           #create a value_list for possible labels of attribute, rainy,sunny,windy for Outlook
         value_list.add(key)
     value_list = list(value_list)
-    # print(f"attribute: {attribute},unique values of attribute: {value_list}")
     # Partition attribute into its labels
-    Sv = createSv(value_list, data_set, attribute)
+    Sv = createSv(value_list, data_set, attribute, list_A)
     # for every label in attribute:
     for key, value in Sv.items():
         # Calculate the total entropy for the Sv value set
@@ -100,8 +111,21 @@ def labels_check(S):
     else:
         return False, max_value
 
-# def createSv(input_set, root_attribute):
-
+"""
+Produces an Sv for the value that was given as an attribute
+"""
+def create_S_tree(dataset, attribute, desired_value_of_att):
+    Sv = {attribute :[]}
+    # if attribute in attribute_list:
+    #     attribute_index_in_training = attribute_list.index(attribute)
+    # else:
+    #     # If the attribute doesn't exist, return an empty dictionary to maintain data structure format
+    #     return {}
+    location_in_training = attributes.index(attribute)
+    for instance in dataset:
+        if desired_value_of_att == instance[location_in_training + 1]:
+            Sv[attribute].append(instance)
+    return Sv
 
 """
 Inputs: 
@@ -116,30 +140,49 @@ def ID3(A, S):
         # N <- leaf node with most common label y in S
         # TODO implement with leaf node
         most_common_label = labels_check(S)[1]
+        N = Node(most_common_label)
+        N.leaf = 1
     # else if all instances in S have the same label y then
     elif labels_check(S)[0]:
-        leaf_node = labels_check(S)[1]
+        N = Node(labels_check(S)[1])
+        N.leaf = 1
         # N <- leaf node with label y
     # else
     else:
-        a_star = informationGain(myDict, A, S, uniqueLabels)
+        # Iterate through all the attributes which attribute in A produces the best gain
+        a_star_dict = {}
+        for att in A:
+            a_star_dict[att] = informationGain(S, att, A)
         # a* <- argmax_(a in A) in A Gain(S, a)
+        a_star = max(a_star_dict, key=a_star_dict.get)
         # N <- non-leaf node with attribute a*
+        N = Node(a_star)
+        # S_v <- {x from S | x_{a*} = v
+        S_v = createSv(myDict[a_star], S, a_star, A)
+        N.children = {x : None for x in list(S_v.keys())}
         # for each possible value v of a* do
-            # S_v <- {x from S | x_{a*} = v
+        for possible_v in myDict[a_star]:
+            print(len(S_v.keys()))
             # if S_v is empty then
+            if len(S_v.keys()) == 0:
                 # N.child_v <- leaf node with most common label y in S
+                N.children = labels_check(S)[1]
             # else
+            else:
                 # N.child_v <- ID3(A \ {a*}, S_v)
+                newlist = [att for att in A if att != a_star]
+                for key in S_v.keys():
+                    N.children[key] = ID3(newlist, S_v[key])
     return N
-# get feature max info
 
-#id3
-## label_list = training_set[0][:]
-## labels_unique = training_set[0][:].unique #so that we can calculate entropy for each label
-## label_count = length(label_list)
-
-# evaluate
+def printTree(result):
+    if result.leaf == 1:
+        print(result.data)
+    else:
+        print(result.data, "-", result.children.keys())
+        for values in result.children.keys():
+            print(values, "-", end="")
+            printTree(result.children[values])
 
 # Beginning of code
 try:
@@ -179,7 +222,7 @@ try:
     # Read in dataset
     df = pd.read_csv(file_path)
 
-    attributes = (df.columns[1:]).to_numpy()          #get the features aside from the label in column[0]
+    attributes = list((df.columns[1:]).to_numpy())      #get the features aside from the label in column[0]
     print(f"features of the dataset:{attributes}")            #this is important in calculating class entropy
 
     # create a dictionary with attribute names as keys and associated data as values
@@ -218,13 +261,20 @@ try:
     # # totalE = totalEntropy(training_set, uniqueLabels)
     # # print(f"Total Entropy of Training Set: {totalE}")
     # #
-    for attribute in attributes:
-        information = informationGain(myDict, attribute, training_set, uniqueLabels)
-        print(f"Attribute: {attribute}, Gained Information: {information}")
+    for att in attributes:
+        information = informationGain(training_set, att, list(attributes))
+        print(f"Attribute: {att}, Gained Information: {information}")
     # # print(f"New Information gained from Training Set: {information}")
 
     # TODO Implement ID3 into the program and create small functions that can be used in the ID3
-    ID3(["hat"], training_set)
+    # A dictionary will be the tree. Key: the root note; Value: Children
+    N = {}
+    result = ID3(list(attributes), training_set)
+    print("Printing tree result output\n")
+    printTree(result)
+    a = 3
+    # result = create_S_tree(training_set, "outlook", "sunny")
+    print("hello")
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
