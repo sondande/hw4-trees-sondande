@@ -8,6 +8,7 @@ numeric (if False, then we treat them as categorical values)
 import sys
 import numpy as np
 import pandas as pd
+from pptree import *
 
 class Node:
     def __init__(self, data):
@@ -170,19 +171,59 @@ def ID3(A, S):
             # else
             else:
                 # N.child_v <- ID3(A \ {a*}, S_v)
-                newlist = [att for att in A if att != a_star]
+                newlist = [attribute for attribute in A if attribute != a_star]
+                # For all the children of the current node, recursively call ID3 with a new list of attributes not
+                # including a* and using the subsection of the data as the input data set
                 for key in S_v.keys():
                     N.children[key] = ID3(newlist, S_v[key])
     return N
 
+
+"""
+Print a tree method to help with visualization
+"""
 def printTree(result):
     if result.leaf == 1:
-        print(result.data)
+        print(f"Leaf Value: {result.data}")
     else:
-        print(result.data, "-", result.children.keys())
+        print(f"Node Value: {result.data} -> Branches: {list(result.children.keys())}", sep=" ")
         for values in result.children.keys():
-            print(values, "-", end="")
+            print(values, "- ", end="")
             printTree(result.children[values])
+
+"""
+Prediction Function
+"""
+def predict(result, testing_set):
+    tt = 0
+    tf = 0
+    ft = 0
+    ff = 0
+    for instance in testing_set:
+        instance_label = instance[0]
+        index_att = attributes.index(result.data)
+        current_node = result
+        while current_node.leaf != 1:
+            index_att = attributes.index(current_node.data)
+            current_node = current_node.children[instance[index_att + 1]]
+            print(f"Instance Value: {instance[index_att]}")
+        predict = current_node.data
+        # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
+        if predict == 'yes' and instance_label == 'yes':
+            tt += 1
+        elif predict == 'yes' and instance_label == 'no':
+            ft += 1
+        elif predict == 'no' and instance_label == 'yes':
+            tf += 1
+        else:
+            ff += 1
+        accuracy = (tt + ff) / (tt + tf + ft + ff)
+        print(f"Laze Confusion matrix")
+        print("Yes, no")
+        print(f"{tt}, {ft}, yes")
+        print(f"{tf}, {ff}, no")
+        print(f"Accuracy: {accuracy}")
+    return [tt, ft, tf, ff]
 
 # Beginning of code
 try:
@@ -256,25 +297,19 @@ try:
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
 
-    #createSv()
-    # # print(f"attribute and values:{myDict[attributes[0]]}")
-    # # totalE = totalEntropy(training_set, uniqueLabels)
-    # # print(f"Total Entropy of Training Set: {totalE}")
-    # #
     for att in attributes:
         information = informationGain(training_set, att, list(attributes))
         print(f"Attribute: {att}, Gained Information: {information}")
-    # # print(f"New Information gained from Training Set: {information}")
 
     # TODO Implement ID3 into the program and create small functions that can be used in the ID3
     # A dictionary will be the tree. Key: the root note; Value: Children
     N = {}
     result = ID3(list(attributes), training_set)
+
     print("Printing tree result output\n")
     printTree(result)
-    a = 3
-    # result = create_S_tree(training_set, "outlook", "sunny")
-    print("hello")
+
+    predict(result, testing_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
