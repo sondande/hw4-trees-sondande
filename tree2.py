@@ -115,18 +115,13 @@ def labels_check(S):
 """
 Produces an Sv for the value that was given as an attribute
 """
-def create_S_tree(dataset, attribute, desired_value_of_att):
-    Sv = {attribute :[]}
-    # if attribute in attribute_list:
-    #     attribute_index_in_training = attribute_list.index(attribute)
-    # else:
-    #     # If the attribute doesn't exist, return an empty dictionary to maintain data structure format
-    #     return {}
-    location_in_training = attributes.index(attribute)
-    for instance in dataset:
-        if desired_value_of_att == instance[location_in_training + 1]:
-            Sv[attribute].append(instance)
-    return Sv
+# def create_S_tree(dataset, attribute, desired_value_of_att):
+#     Sv = {attribute :[]}
+#     location_in_training = attributes.index(attribute)
+#     for instance in dataset:
+#         if desired_value_of_att == instance[location_in_training + 1]:
+#             Sv[attribute].append(instance)
+#     return Sv
 
 """
 Inputs: 
