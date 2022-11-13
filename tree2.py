@@ -60,17 +60,22 @@ def createSv(value_list, training_set, attribute, attribute_list):
     else:
         # If the attribute doesn't exist, return an empty dictionary to maintain data structure format
         return {}
-    for value in value_list:
-        listofvalues = []
-        # print("value:",value)
-        for instance in training_set:
-            # print("instance:",instance)
-            if value == instance[attribute_index_in_training + 1]:
-                # print("listInstance:",instance)
-                listofvalues.append(instance)
-        Sv[value] = listofvalues
+    listofvalues = []
+    # print("value:",value)
+    for instance in training_set:
+        # print("instance:",instance)
+        if value == instance[attribute_index_in_training + 1]:
+            # print("listInstance:",instance)
+            listofvalues.append(instance)
+    Sv[value] = listofvalues
     return Sv
-
+def createSv2(S, attribute, value):
+    Sv = []
+    ind = attributes.index(attribute)
+    for instance in S:
+        if value in instance[ind + 1]:
+            Sv.append(instance)
+    return Sv
 
 # calculate information gain
 def informationGain(data_set, attribute, list_A):
@@ -111,17 +116,6 @@ def labels_check(S):
         return True, max_value
     else:
         return False, max_value
-
-"""
-Produces an Sv for the value that was given as an attribute
-"""
-# def create_S_tree(dataset, attribute, desired_value_of_att):
-#     Sv = {attribute :[]}
-#     location_in_training = attributes.index(attribute)
-#     for instance in dataset:
-#         if desired_value_of_att == instance[location_in_training + 1]:
-#             Sv[attribute].append(instance)
-#     return Sv
 
 """
 Inputs: 
@@ -296,15 +290,17 @@ try:
         information = informationGain(training_set, att, list(attributes))
         print(f"Attribute: {att}, Gained Information: {information}")
 
+    result = createSv2(training_set, "outlook", "rainy")
+    result2 = createSv2(result, "temperature", "hot")
     # TODO Implement ID3 into the program and create small functions that can be used in the ID3
     # A dictionary will be the tree. Key: the root note; Value: Children
     N = {}
-    result = ID3(list(attributes), training_set)
+    # result = ID3(list(attributes), training_set)
 
     print("Printing tree result output\n")
-    printTree(result)
+    # printTree(result)
 
-    predict(result, testing_set)
+    # predict(result, testing_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
