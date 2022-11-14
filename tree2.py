@@ -17,6 +17,12 @@ class Node:
         # Only is 1 if it is a leaf.
         self.leaf = 0
 
+    def __str__(self, level = 0):
+        ret = "\t" * level + repr(self.data) + "\n"
+        for child in self.children:
+            ret += "\t" * (level + 1) + "Branch: " + child + "\n" + self.children[child].__str__(level + 1)
+        return ret
+
 """
 Calculate total entropy of the whole dataset
 """
@@ -133,13 +139,13 @@ def ID3(A, S):
         most_common_label = labels_check(S)[1]
         N = Node(most_common_label)
         N.leaf = 1
-        N.children = None
+        # N.children = None
     # else if all instances in S have the same label y then
     elif labels_check(S)[0]:
         # N <- leaf node with label y
         N = Node(labels_check(S)[1])
         N.leaf = 1
-        N.children = None
+        # N.children = None
     # else
     else:
         # Iterate through all the attributes which attribute in A produces the best gain
@@ -297,8 +303,10 @@ try:
     result = ID3(list(attributes), training_set)
 
     print("Printing tree result output\n")
-    # printTree(result)
+    printTree(result)
 
+    print("attempt 2\n")
+    print(str(result))
     # predict(result, testing_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
