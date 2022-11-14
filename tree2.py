@@ -13,7 +13,7 @@ from pptree import *
 class Node:
     def __init__(self, data):
         self.data = data
-        self.children = []
+        self.children = {}
         # Only is 1 if it is a leaf.
         self.leaf = 0
 
@@ -60,14 +60,15 @@ def createSv(value_list, training_set, attribute, attribute_list):
     else:
         # If the attribute doesn't exist, return an empty dictionary to maintain data structure format
         return {}
-    listofvalues = []
-    # print("value:",value)
-    for instance in training_set:
-        # print("instance:",instance)
-        if value == instance[attribute_index_in_training + 1]:
-            # print("listInstance:",instance)
-            listofvalues.append(instance)
-    Sv[value] = listofvalues
+    for value in value_list:
+        listofvalues = []
+        # print("value:",value)
+        for instance in training_set:
+            # print("instance:",instance)
+            if value == instance[attribute_index_in_training + 1]:
+                # print("listInstance:",instance)
+                listofvalues.append(instance)
+        Sv[value] = listofvalues
     return Sv
 def createSv2(S, attribute, value):
     Sv = []
@@ -89,11 +90,11 @@ def informationGain(data_set, attribute, list_A):
     # Partition attribute into its labels
     Sv = createSv(value_list, data_set, attribute, list_A)
     # for every label in attribute:
-    for key, value in Sv.items():
+    for key, val in Sv.items():
         # Calculate the total entropy for the Sv value set
-        entropy_of_att = totalEntropy(value, uniqueLabels)
+        entropy_of_att = totalEntropy(val, uniqueLabels)
         # get the probability amount by the length of that Sv against the total number of instances in S
-        probability = len(value) / num_instances
+        probability = len(val) / num_instances
         # Get the first part of that instance to add with all the rest. The summation of all the entropy* prob
         att_info += (probability * entropy_of_att)
     # Calculate Information Gain through the total entropy of the whole dataset against the summation of breaking that down
@@ -132,11 +133,13 @@ def ID3(A, S):
         most_common_label = labels_check(S)[1]
         N = Node(most_common_label)
         N.leaf = 1
+        N.children = None
     # else if all instances in S have the same label y then
     elif labels_check(S)[0]:
+        # N <- leaf node with label y
         N = Node(labels_check(S)[1])
         N.leaf = 1
-        # N <- leaf node with label y
+        N.children = None
     # else
     else:
         # Iterate through all the attributes which attribute in A produces the best gain
@@ -147,14 +150,11 @@ def ID3(A, S):
         a_star = max(a_star_dict, key=a_star_dict.get)
         # N <- non-leaf node with attribute a*
         N = Node(a_star)
-        # S_v <- {x from S | x_{a*} = v
-        S_v = createSv(myDict[a_star], S, a_star, A)
-        N.children = {x : None for x in list(S_v.keys())}
         # for each possible value v of a* do
         for possible_v in myDict[a_star]:
-            print(len(S_v.keys()))
+            S_v = createSv2(S, a_star, possible_v)
             # if S_v is empty then
-            if len(S_v.keys()) == 0:
+            if len(S_v) == 0:
                 # N.child_v <- leaf node with most common label y in S
                 N.children = labels_check(S)[1]
             # else
@@ -163,8 +163,7 @@ def ID3(A, S):
                 newlist = [attribute for attribute in A if attribute != a_star]
                 # For all the children of the current node, recursively call ID3 with a new list of attributes not
                 # including a* and using the subsection of the data as the input data set
-                for key in S_v.keys():
-                    N.children[key] = ID3(newlist, S_v[key])
+                N.children[possible_v] = ID3(newlist, S_v)
     return N
 
 
@@ -290,12 +289,12 @@ try:
         information = informationGain(training_set, att, list(attributes))
         print(f"Attribute: {att}, Gained Information: {information}")
 
-    result = createSv2(training_set, "outlook", "rainy")
-    result2 = createSv2(result, "temperature", "hot")
+    # result = createSv2(training_set, "outlook", "rainy")
+    # result2 = createSv2(result, "temperature", "hot")
     # TODO Implement ID3 into the program and create small functions that can be used in the ID3
     # A dictionary will be the tree. Key: the root note; Value: Children
-    N = {}
-    # result = ID3(list(attributes), training_set)
+    # N = {}
+    result = ID3(list(attributes), training_set)
 
     print("Printing tree result output\n")
     # printTree(result)
