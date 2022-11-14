@@ -162,16 +162,17 @@ def ID3(A, S):
             # if S_v is empty then
             if len(S_v) == 0:
                 # N.child_v <- leaf node with most common label y in S
-                N.children = labels_check(S)[1]
+                N.children[possible_v] = Node(labels_check(S)[1])
+                N.children[possible_v].leaf = 1
             # else
             else:
                 # N.child_v <- ID3(A \ {a*}, S_v)
                 newlist = [attribute for attribute in A if attribute != a_star]
                 #N.children[possible_v] = newlist
-                print(f"test:{N.children[possible_v]}")
+                #print(f"test:{N.children[possible_v]}")
                 # For all the children of the current node, recursively call ID3 with a new list of attributes not
                 # including a* and using the subsection of the data as the input data set
-                N.children[possible_v]= list(ID3(newlist, S_v))
+                N.children[possible_v] = ID3(newlist, S_v)
     return N
 
 
