@@ -167,9 +167,11 @@ def ID3(A, S):
             else:
                 # N.child_v <- ID3(A \ {a*}, S_v)
                 newlist = [attribute for attribute in A if attribute != a_star]
+                #N.children[possible_v] = newlist
+                print(f"test:{N.children[possible_v]}")
                 # For all the children of the current node, recursively call ID3 with a new list of attributes not
                 # including a* and using the subsection of the data as the input data set
-                N.children[possible_v] = ID3(newlist, S_v)
+                N.children[possible_v]= list(ID3(newlist, S_v))
     return N
 
 
@@ -193,6 +195,7 @@ def predict(result, testing_set):
     tf = 0
     ft = 0
     ff = 0
+    accuracy = 0
     for instance in testing_set:
         instance_label = instance[0]
         index_att = attributes.index(result.data)
