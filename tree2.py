@@ -200,7 +200,7 @@ def predict(result, testing_set):
         while current_node.leaf != 1:
             index_att = attributes.index(current_node.data)
             current_node = current_node.children[instance[index_att + 1]]
-            print(f"Instance Value: {instance[index_att]}")
+            # print(f"Instance Value: {instance[index_att]}")
         predict = current_node.data
         # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
         if predict == 'yes' and instance_label == 'yes':
@@ -212,11 +212,11 @@ def predict(result, testing_set):
         else:
             ff += 1
         accuracy = (tt + ff) / (tt + tf + ft + ff)
-        print(f"Laze Confusion matrix")
-        print("Yes, no")
-        print(f"{tt}, {ft}, yes")
-        print(f"{tf}, {ff}, no")
-        print(f"Accuracy: {accuracy}")
+    print(f"Laze Confusion matrix")
+    print("Yes, no")
+    print(f"{tt}, {ft}, yes")
+    print(f"{tf}, {ff}, no")
+    print(f"Accuracy: {accuracy}")
     return [tt, ft, tf, ff]
 
 # Beginning of code
@@ -302,12 +302,9 @@ try:
     # N = {}
     result = ID3(list(attributes), training_set)
 
-    print("Printing tree result output\n")
-    printTree(result)
-
     print("attempt 2\n")
     print(str(result))
-    # predict(result, testing_set)
+    predict(result, testing_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
