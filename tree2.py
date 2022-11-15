@@ -215,6 +215,14 @@ def predict(result, testing_set):
             tf += 1
         else:
             ff += 1
+        if predict == instance_label:
+            tt += 1
+        elif predict == 'yes' and instance_label == 'no':
+            ft += 1
+        elif predict == 'no' and instance_label == 'yes':
+            tf += 1
+        else:
+            ff += 1
         accuracy = (tt + ff) / (tt + tf + ft + ff)
     print(f"Laze Confusion matrix")
     print("Yes, no")
@@ -260,6 +268,9 @@ try:
 
     # Read in dataset
     df = pd.read_csv(file_path)
+
+    if not handle_numeric:
+        df = df.astype(str)
 
     attributes = list((df.columns[1:]).to_numpy())      #get the features aside from the label in column[0]
     print(f"features of the dataset:{attributes}")            #this is important in calculating class entropy
