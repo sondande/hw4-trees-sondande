@@ -9,6 +9,7 @@ import sys
 import numpy as np
 import pandas as pd
 from pptree import *
+from copy import copy
 
 class Node:
     def __init__(self, data):
@@ -106,6 +107,30 @@ def informationGain(data_set, attribute, list_A):
     # Calculate Information Gain through the total entropy of the whole dataset against the summation of breaking that down
     new_entropy = totalEntropy(data_set, uniqueLabels) - att_info
     return new_entropy                                                            # return this value
+
+# find threshold and info gain for numeric attributes
+
+def infoGainNumeric(data_set, attribute, list_A):
+    num_instances = len(data_set)
+    data = copy(data_set)
+    att_list = copy(list_A)
+    att_info = 0.0
+    info_gain_max = -1
+    best_attribute = None
+    best_threshold = 0
+    for attribute in att_list:
+        sortedIndex = data[attribute].sort_values(ascending=True).index
+        sortedData = data[attribute][sortedIndex]
+        for i in range(0, len(sortedData) - 1):
+            if sortedData[i] != sortedData[i + 1]:
+                threshold = (sortedData[i] + sortedData[i + 1]) / 2
+                att_info = informationGain(data, sortedData[i], att_list)
+            if att_info > info_gain_max:
+                info_gain_max = att_info
+                best_threshold = threshold
+                best_attribute = sortedData[i]
+    return best_attribute, best_threshold
+
 
 """
 Function used to check an instance of the training set and tell you either the most common value and if it is the only only label in that instance of the training set
@@ -305,6 +330,8 @@ try:
         labels.append(training_set[insta_count][0])
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
+
+
 
     for att in attributes:
         information = informationGain(training_set, att, list(attributes))
