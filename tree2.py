@@ -108,8 +108,31 @@ def informationGain(data_set, attribute, list_A):
     new_entropy = totalEntropy(data_set, uniqueLabels) - att_info
     return new_entropy                                                            # return this value
 
-# find threshold and info gain for numeric attributes
+"""
+Find Thresholds from an input dataset
+"""
+def threshold_find(data_set, attribute, list_A):
+    # Create list of Thresholds
+    T = []
+    # Get the index of the attribute we want in the numpy dataset
+    ind = attributes.index(attribute) + 1
+    # Sort the input dataset by the attribute given as the one we want to sort
+    sorted_data_set = data_set[data_set[:, ind].argsort()]
+    # Get the first label from sorted dataset
+    last_label = sorted_data_set[0]
+    # iterate through all the instances in the datset and calculate the thresholds
+    for instance in sorted_data_set[1:]:
+        instance_label = instance[0]
+        if last_label[0] != instance_label:
+            difference = (float(instance[ind]) - float(last_label[ind])) / 2
+            new_value = float(last_label[ind]) + difference
+            T.append(new_value)
+            last_label = instance
 
+    return set(T)
+
+
+# find threshold and info gain for numeric attributes
 def infoGainNumeric(data_set, attribute, list_A):
     num_instances = len(data_set)
     data = copy(data_set)
@@ -119,7 +142,10 @@ def infoGainNumeric(data_set, attribute, list_A):
     best_attribute = None
     best_threshold = 0
     for attribute in att_list:
-        sortedIndex = data[attribute].sort_values(ascending=True).index
+        # index_att = attributes.index()
+        list_temp = data[attribute]
+        list_temp = list_temp.sort_values(ascending=True)
+        sortedIndex = data[attribute].sort_values(ascending=True).index()
         sortedData = data[attribute][sortedIndex]
         for i in range(0, len(sortedData) - 1):
             if sortedData[i] != sortedData[i + 1]:
@@ -332,10 +358,12 @@ try:
     print(uniqueLabels)
 
 
-
     for att in attributes:
-        information = informationGain(training_set, att, list(attributes))
-        print(f"Attribute: {att}, Gained Information: {information}")
+        information_entropy = informationGain(training_set, att, list(attributes))
+        information_gini = threshold_find(training_set, att, list(attributes))
+        # information_gini = infoGainNumeric(training_set, att, list(attributes))
+        print(f"Attribute: {att}, Entropy Gained Information: {information_entropy}")
+        print(f"Attribute: {att}, Gini Gained Information: {information_gini}")
 
     # result = createSv2(training_set, "outlook", "rainy")
     # result2 = createSv2(result, "temperature", "hot")
