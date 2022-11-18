@@ -51,7 +51,8 @@ def totalEntropy(data_set, output_labels):
         # Add to the total entropy
         total_entropy += entropy
         #print("total entropy is: ", total_entropy)
-
+    if total_entropy == 0:
+        return total_entropy
     return -1 * total_entropy
 
 """
@@ -111,7 +112,7 @@ def informationGain(data_set, attribute, list_A):
 """
 Find Thresholds from an input dataset
 """
-def threshold_find(data_set, attribute, list_A):
+def threshold_find(data_set, attribute):
     # Create list of Thresholds
     T = []
     # Get the index of the attribute we want in the numpy dataset
@@ -131,6 +132,33 @@ def threshold_find(data_set, attribute, list_A):
 
     return set(T)
 
+"""
+Handling Continous Attributes
+"""
+def infoGain_con_att(data_set, attribute, list_A):
+    best_threshold = 0
+    ind = attributes.index(attribute) + 1
+    T_list = threshold_find(data_set, attribute)
+    left_side_dataset = []
+    right_side_dataset = []
+    dict_threshold = {}
+    for threshold in T_list:
+        for instance in data_set:
+            if instance[ind] <= threshold:
+                left_side_dataset.append(instance)
+            else:
+                right_side_dataset.append(instance)
+        prob_left = len(left_side_dataset) / len(data_set)
+        prob_right = len(right_side_dataset) / len(data_set)
+        gain_result = 1 - (prob_left * totalEntropy(left_side_dataset, uniqueLabels) + prob_right * totalEntropy(right_side_dataset, uniqueLabels))
+        print(f"Information gain: {gain_result}")
+        if threshold in dict_threshold.keys():
+            if dict_threshold[threshold] < gain_result:
+                dict_threshold[threshold] = gain_result
+        else:
+            dict_threshold[threshold] = gain_result
+    best_threshold_result = max(dict_threshold, key=dict_threshold.get)
+    return best_threshold_result
 
 # find threshold and info gain for numeric attributes
 def infoGainNumeric(data_set, attribute, list_A):
@@ -360,8 +388,8 @@ try:
 
     for att in attributes:
         information_entropy = informationGain(training_set, att, list(attributes))
-        information_gini = threshold_find(training_set, att, list(attributes))
-        # information_gini = infoGainNumeric(training_set, att, list(attributes))
+        information_gini = infoGain_con_att(training_set, att, list(attributes))
+        # information_gini = infoGain_con_att(training_set, att, list(attributes))
         print(f"Attribute: {att}, Entropy Gained Information: {information_entropy}")
         print(f"Attribute: {att}, Gini Gained Information: {information_gini}")
 
