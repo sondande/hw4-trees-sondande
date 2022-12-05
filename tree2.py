@@ -17,6 +17,8 @@ class Node:
         self.children = {}
         # Only is 1 if it is a leaf.
         self.leaf = 0
+        # Contains a threshold if the dataset being handled is numerical
+        self.threshold = None
 
     def __str__(self, level = 0):
         ret = "\t" * level + repr(self.data) + "\n"
@@ -58,7 +60,6 @@ def totalEntropy(data_set, output_labels):
 """
 Create a Sv that is using an attribute of the dataset as the root node and partitioning through the dataset for values that. Used for information gain 
 """
-# TODO adapt this to partition using an Sv created. Like for Sv of outlook, can it make an Sv for temperature of that Sv
 def createSv(value_list, training_set, attribute, attribute_list):
     # create a dictionary of the subsets for S with it's attributes
     # Ex: if the attribute is Outlook, create Ssunny, Srainy, Swindy with attributes and labels
@@ -78,6 +79,7 @@ def createSv(value_list, training_set, attribute, attribute_list):
                 listofvalues.append(instance)
         Sv[value] = listofvalues
     return Sv
+
 def createSv2(S, attribute, value):
     Sv = []
     ind = attributes.index(attribute)
@@ -136,7 +138,6 @@ def threshold_find(data_set, attribute):
 Handling Continous Attributes
 """
 def infoGain_con_att(data_set, attribute, list_A):
-    best_threshold = 0
     ind = attributes.index(attribute) + 1
     T_list = threshold_find(data_set, attribute)
     left_side_dataset = []
@@ -151,16 +152,17 @@ def infoGain_con_att(data_set, attribute, list_A):
         prob_left = len(left_side_dataset) / len(data_set)
         prob_right = len(right_side_dataset) / len(data_set)
         gain_result = 1 - (prob_left * totalEntropy(left_side_dataset, uniqueLabels) + prob_right * totalEntropy(right_side_dataset, uniqueLabels))
-        print(f"Information gain: {gain_result}")
+        # print(f"Information gain: {gain_result}")
         if threshold in dict_threshold.keys():
             if dict_threshold[threshold] < gain_result:
                 dict_threshold[threshold] = gain_result
         else:
             dict_threshold[threshold] = gain_result
     best_threshold_result = max(dict_threshold, key=dict_threshold.get)
-    return best_threshold_result
+    return best_threshold_result, dict_threshold[best_threshold_result]
 
 # find threshold and info gain for numeric attributes
+# TODO Fix this method to work
 def infoGainNumeric(data_set, attribute, list_A):
     num_instances = len(data_set)
     data = copy(data_set)
@@ -170,8 +172,8 @@ def infoGainNumeric(data_set, attribute, list_A):
     best_attribute = None
     best_threshold = 0
     for attribute in att_list:
-        # index_att = attributes.index()
-        list_temp = data[attribute]
+        index_att = attributes.index()
+        list_temp = data[index_att]
         list_temp = list_temp.sort_values(ascending=True)
         sortedIndex = data[attribute].sort_values(ascending=True).index()
         sortedData = data[attribute][sortedIndex]
@@ -229,29 +231,69 @@ def ID3(A, S):
     else:
         # Iterate through all the attributes which attribute in A produces the best gain
         a_star_dict = {}
+        a_star_dict_thres = {}
         for att in A:
-            a_star_dict[att] = informationGain(S, att, A)
+            if handle_numeric:
+                best_thres, gain  = infoGain_con_att(S, att, A)
+                a_star_dict[att]= gain
+                a_star_dict_thres[att]= best_thres
+            else:
+                a_star_dict[att] = informationGain(S, att, A)
         # a* <- argmax_(a in A) in A Gain(S, a)
-        a_star = max(a_star_dict, key=a_star_dict.get)
+        if handle_numeric:
+            a_star = max(a_star_dict, key=a_star_dict.get)
+            a_star_thres = a_star_dict_thres[a_star]
+        else:
+            a_star = max(a_star_dict, key=a_star_dict.get)
         # N <- non-leaf node with attribute a*
         N = Node(a_star)
-        # for each possible value v of a* do
-        for possible_v in myDict[a_star]:
-            S_v = createSv2(S, a_star, possible_v)
-            # if S_v is empty then
-            if len(S_v) == 0:
-                # N.child_v <- leaf node with most common label y in S
-                N.children[possible_v] = Node(labels_check(S)[1])
-                N.children[possible_v].leaf = 1
-            # else
-            else:
-                # N.child_v <- ID3(A \ {a*}, S_v)
-                newlist = [attribute for attribute in A if attribute != a_star]
-                #N.children[possible_v] = newlist
-                #print(f"test:{N.children[possible_v]}")
-                # For all the children of the current node, recursively call ID3 with a new list of attributes not
-                # including a* and using the subsection of the data as the input data set
-                N.children[possible_v] = ID3(newlist, S_v)
+        if handle_numeric:
+            N.threshold = a_star_thres
+        if not handle_numeric:
+            # for each possible value v of a* do
+            for possible_v in myDict[a_star]:
+                S_v = createSv2(S, a_star, possible_v)
+                # if S_v is empty then
+                if len(S_v) == 0:
+                    # N.child_v <- leaf node with most common label y in S
+                    N.children[possible_v] = Node(labels_check(S)[1])
+                    N.children[possible_v].leaf = 1
+                # else
+                else:
+                    # N.child_v <- ID3(A \ {a*}, S_v)
+                    newlist = [attribute for attribute in A if attribute != a_star]
+                    #N.children[possible_v] = newlist
+                    #print(f"test:{N.children[possible_v]}")
+                    # For all the children of the current node, recursively call ID3 with a new list of attributes not
+                    # including a* and using the subsection of the data as the input data set
+                    N.children[possible_v] = ID3(newlist, S_v)
+        # Handling numerical part
+        else:
+            # Create S_v_left and S_v_right using threshold
+            S_v_left = []
+            S_v_right = []
+            ind = attributes.index(a_star)
+            for instance in S:
+                if instance[ind + 1] <= a_star_thres:
+                    S_v_left.append(instance)
+                else:
+                    S_v_right.append(instance)
+            S_v_binary = [S_v_left, S_v_right]
+            for S_v in S_v_binary:
+                # if S_v is empty then
+                if len(S_v) == 0:
+                    # N.child_v <- leaf node with most common label y in S
+                    N.children[possible_v] = Node(labels_check(S)[1])
+                    N.children[possible_v].leaf = 1
+                # else
+                else:
+                    # N.child_v <- ID3(A \ {a*}, S_v)
+                    newlist = [attribute for attribute in A if attribute != a_star]
+                    # N.children[possible_v] = newlist
+                    # print(f"test:{N.children[possible_v]}")
+                    # For all the children of the current node, recursively call ID3 with a new list of attributes not
+                    # including a* and using the subsection of the data as the input data set
+                    N.children[possible_v] = ID3(newlist, S_v)
     return N
 
 
@@ -333,13 +375,6 @@ try:
 
     # f. The threshold to use for deciding if the predicted label is a 0 or 1
     handle_numeric = str(sys.argv[4])
-    if handle_numeric == "True":
-        handle_numeric = True
-    elif handle_numeric == "False":
-        handle_numeric = False
-    else:
-        print("Invalid Boolean. Please enter 'True' or 'False' on how you'd like to evaluate numerical values")
-        exit(1)
 
     # Print all input values given for user to see
     print(f"Inputs:\nFile: {file_path}\nTraining set percent: {training_set_percent}")
@@ -348,18 +383,26 @@ try:
     # Read in dataset
     df = pd.read_csv(file_path)
 
+    if handle_numeric == "True":
+        handle_numeric = True
+    elif handle_numeric == "False":
+        handle_numeric = False
+    else:
+        print("Invalid Boolean. Please enter 'True' or 'False' on how you'd like to evaluate numerical values")
+        exit(1)
+
     if not handle_numeric:
         df = df.astype(str)
+    else:
+        for col in df.columns[1:]:
+            df[col] = pd.to_numeric(df[col], errors="ignore")
 
+    print(df.info())
     attributes = list((df.columns[1:]).to_numpy())      #get the features aside from the label in column[0]
     print(f"features of the dataset:{attributes}")            #this is important in calculating class entropy
 
     # create a dictionary with attribute names as keys and associated data as values
     myDict = df.to_dict('list')
-
-    # Cast each list of values in the dictionary as a set so that we only have unique values
-    for value in myDict.keys():
-        myDict[value] = set(myDict[value])
 
     # shuffle the dataframe. Use random seed from input and fraction 1 as we want the whole dataframe
     shuffled_df = df.sample(frac=1, random_state=randomSeed)
@@ -374,8 +417,7 @@ try:
     print(f"Length of training: {len(training_set)}")
     print(f"Length of testing: {len(testing_set)}\n")
 
-    # uniqueLabels = training_set["label"].unique()
-
+    # Set sets to numpy arrays
     training_set = training_set.to_numpy()
     testing_set = testing_set.to_numpy()
 
@@ -385,19 +427,24 @@ try:
     uniqueLabels = np.unique(labels)
     print(uniqueLabels)
 
+    # Cast each list of values in the dictionary as a set so that we only have unique values
+    # if handle_numeric:
+    #     input_list = list(myDict.keys())[1:]
+    #     for value in input_list:
+    #         gain = infoGain_con_att(training_set, value, list(attributes))
+    #         myDict[value] = [gain]
+    # else:
+    for value in myDict.keys():
+        myDict[value] = set(myDict[value])
 
-    for att in attributes:
-        information_entropy = informationGain(training_set, att, list(attributes))
-        information_gini = infoGain_con_att(training_set, att, list(attributes))
-        # information_gini = infoGain_con_att(training_set, att, list(attributes))
-        print(f"Attribute: {att}, Entropy Gained Information: {information_entropy}")
-        print(f"Attribute: {att}, Gini Gained Information: {information_gini}")
+    if handle_numeric:
+        # store the best thresholds for each attribute if we are handling numberic
+        myThresholds ={}
+        for att in attributes:
+            # information_entropy = informationGain(training_set, att, list(attributes))
+            # information_gini = infoGainNumeric(training_set, att, list(attributes))
+            myThresholds[att] = infoGain_con_att(training_set, att, list(attributes))
 
-    # result = createSv2(training_set, "outlook", "rainy")
-    # result2 = createSv2(result, "temperature", "hot")
-    # TODO Implement ID3 into the program and create small functions that can be used in the ID3
-    # A dictionary will be the tree. Key: the root note; Value: Children
-    # N = {}
     result = ID3(list(attributes), training_set)
 
     print("attempt 2\n")
