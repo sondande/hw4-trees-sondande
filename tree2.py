@@ -115,6 +115,7 @@ def informationGain(data_set, attribute, list_A):
 Find Thresholds from an input dataset
 """
 def threshold_find(data_set, attribute):
+    data_set = np.array(data_set)
     # Create list of Thresholds
     T = []
     # Get the index of the attribute we want in the numpy dataset
@@ -279,21 +280,23 @@ def ID3(A, S):
                 else:
                     S_v_right.append(instance)
             S_v_binary = [S_v_left, S_v_right]
-            for S_v in S_v_binary:
-                # if S_v is empty then
-                if len(S_v) == 0:
-                    # N.child_v <- leaf node with most common label y in S
-                    N.children[possible_v] = Node(labels_check(S)[1])
-                    N.children[possible_v].leaf = 1
-                # else
-                else:
-                    # N.child_v <- ID3(A \ {a*}, S_v)
-                    newlist = [attribute for attribute in A if attribute != a_star]
-                    # N.children[possible_v] = newlist
-                    # print(f"test:{N.children[possible_v]}")
-                    # For all the children of the current node, recursively call ID3 with a new list of attributes not
-                    # including a* and using the subsection of the data as the input data set
-                    N.children[possible_v] = ID3(newlist, S_v)
+            # if S_v is empty then
+            if len(S_v_left) == 0:
+                # N.child_v <- leaf node with most common label y in S
+                N.children[a_star] = Node(labels_check(S)[1])
+                N.children[a_star].leaf = 1
+            elif len(S_v_right) == 0:
+                # N.child_v <- leaf node with most common label y in S
+                N.children[a_star] = Node(labels_check(S)[1])
+                N.children[a_star].leaf = 1
+            # else
+            else:
+                # N.child_v <- ID3(A \ {a*}, S_v)
+                newlist = [attribute for attribute in A if attribute != a_star]
+                # For all the children of the current node, recursively call ID3 with a new list of attributes not
+                # including a* and using the subsection of the data as the input data set
+                N.children["left"] = ID3(newlist, S_v_left)
+                N.children["right"] = ID3(newlist, S_v_right)
     return N
 
 
@@ -325,7 +328,7 @@ def predict(result, testing_set):
         while current_node.leaf != 1:
             index_att = attributes.index(current_node.data)
             current_node = current_node.children[instance[index_att + 1]]
-            # print(f"Instance Value: {instance[index_att]}")
+            print(f"Instance Value: {instance[index_att]}")
         predict = current_node.data
         # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
         if predict == 'yes' and instance_label == 'yes':
@@ -345,6 +348,54 @@ def predict(result, testing_set):
         else:
             ff += 1
         accuracy = (tt + ff) / (tt + tf + ft + ff)
+    print(f"Laze Confusion matrix")
+    print("Yes, no")
+    print(f"{tt}, {ft}, yes")
+    print(f"{tf}, {ff}, no")
+    print(f"Accuracy: {accuracy}")
+    return [tt, ft, tf, ff]
+
+def predict_numeric(result, test_set):
+    tt = 0
+    tf = 0
+    ft = 0
+    ff = 0
+    accuracy = 0
+    for instance in testing_set:
+        instance_label = instance[0]
+        # index_att = attributes.index(result.data) + 1
+        current_node = result
+        current_node_threshold = current_node.threshold
+        while current_node.leaf != 1:
+            index_att = attributes.index(current_node.data) + 1
+            if current_node_threshold > instance[index_att]:
+                current_node = current_node.children["right"]
+                current_node_threshold = current_node.threshold
+            else:
+                current_node = current_node.children["left"]
+                current_node_threshold = current_node.threshold
+            print(f"Instance Value: {instance[index_att]}")
+        predict = current_node.data
+        # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
+        if predict == instance_label:
+            tt += 1
+        else:
+            ff += 1
+        # elif predict == 'yes' and instance_label == 'no':
+        #     ft += 1
+        # elif predict == 'no' and instance_label == 'yes':
+        #     tf += 1
+        # else:
+        #     ff += 1
+        # if predict == instance_label:
+        #     tt += 1
+        # elif predict == 'yes' and instance_label == 'no':
+        #     ft += 1
+        # elif predict == 'no' and instance_label == 'yes':
+        #     tf += 1
+        # else:
+        #     ff += 1
+        # accuracy = (tt + ff) / (tt + tf + ft + ff)
     print(f"Laze Confusion matrix")
     print("Yes, no")
     print(f"{tt}, {ft}, yes")
@@ -449,7 +500,10 @@ try:
 
     print("attempt 2\n")
     print(str(result))
-    predict(result, testing_set)
+    if handle_numeric:
+        predict_numeric(result,testing_set)
+    else:
+        predict(result, testing_set)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)
