@@ -5,6 +5,9 @@ c. A random seed as an integer
 d. Either True or False indicating whether we should handle numeric attributes as
 numeric (if False, then we treat them as categorical values)
 """
+
+# TODO: I tihnk the problem is how the tree is doing the binary splitting and then the creation of the trees
+# Could also be the part of the find the threshold to use accordingly
 import sys
 import numpy as np
 import pandas as pd
@@ -21,7 +24,7 @@ class Node:
         self.threshold = None
 
     def __str__(self, level = 0):
-        ret = "\t" * level + repr(self.data) + "\n"
+        ret = "\t" * level + repr(self.data) + "=> Threshold: " + repr(self.threshold) + "\n"
         for child in self.children:
             ret += "\t" * (level + 1) + "Branch: " + child + "\n" + self.children[child].__str__(level + 1)
         return ret
@@ -174,8 +177,8 @@ def infoGainNumeric(data_set, attribute, list_A):
     best_threshold = 0
     for attribute in att_list:
         index_att = attributes.index()
-        list_temp = data[index_att]
-        list_temp = list_temp.sort_values(ascending=True)
+        list_temp = data[index_att].sort_values(ascending=True)
+        # list_temp = list_temp.sort_values(ascending=True)
         sortedIndex = data[attribute].sort_values(ascending=True).index()
         sortedData = data[attribute][sortedIndex]
         for i in range(0, len(sortedData) - 1):
@@ -275,11 +278,11 @@ def ID3(A, S):
             S_v_right = []
             ind = attributes.index(a_star)
             for instance in S:
+                # See if the instance amount is less than or equal to the threshold
                 if instance[ind + 1] <= a_star_thres:
                     S_v_left.append(instance)
                 else:
                     S_v_right.append(instance)
-            S_v_binary = [S_v_left, S_v_right]
             # if S_v is empty then
             if len(S_v_left) == 0:
                 # N.child_v <- leaf node with most common label y in S
@@ -403,6 +406,7 @@ def predict_numeric(result, test_set):
     print(f"Accuracy: {accuracy}")
     return [tt, ft, tf, ff]
 
+
 # Beginning of code
 try:
     # Get Dataset File
@@ -492,8 +496,6 @@ try:
         # store the best thresholds for each attribute if we are handling numberic
         myThresholds ={}
         for att in attributes:
-            # information_entropy = informationGain(training_set, att, list(attributes))
-            # information_gini = infoGainNumeric(training_set, att, list(attributes))
             myThresholds[att] = infoGain_con_att(training_set, att, list(attributes))
 
     result = ID3(list(attributes), training_set)
