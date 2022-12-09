@@ -131,11 +131,10 @@ def threshold_find(data_set, attribute):
     for instance in sorted_data_set[1:]:
         instance_label = instance[0]
         if last_label[0] != instance_label:
-            difference = (float(instance[ind]) - float(last_label[ind])) / 2
-            new_value = float(last_label[ind]) + difference
+            new_value = (float(instance[ind]) + float(last_label[ind])) / 2
+            # new_value = float(last_label[ind]) + difference
             T.append(new_value)
-            last_label = instance
-
+        last_label = instance
     return set(T)
 
 """
@@ -144,10 +143,10 @@ Handling Continous Attributes
 def infoGain_con_att(data_set, attribute, list_A):
     ind = attributes.index(attribute) + 1
     T_list = threshold_find(data_set, attribute)
-    left_side_dataset = []
-    right_side_dataset = []
     dict_threshold = {}
     for threshold in T_list:
+        left_side_dataset = []
+        right_side_dataset = []
         for instance in data_set:
             if instance[ind] <= threshold:
                 left_side_dataset.append(instance)
@@ -251,6 +250,7 @@ def ID3(A, S):
             a_star = max(a_star_dict, key=a_star_dict.get)
         # N <- non-leaf node with attribute a*
         N = Node(a_star)
+        # Store the threshold if we are handling numeric
         if handle_numeric:
             N.threshold = a_star_thres
         if not handle_numeric:
@@ -283,23 +283,23 @@ def ID3(A, S):
                     S_v_left.append(instance)
                 else:
                     S_v_right.append(instance)
-            # if S_v is empty then
+            # Left side creation
             if len(S_v_left) == 0:
                 # N.child_v <- leaf node with most common label y in S
                 N.children[a_star] = Node(labels_check(S)[1])
                 N.children[a_star].leaf = 1
-            elif len(S_v_right) == 0:
+            else:
+                # create children for the left side of the tree
+                N.children["left"] = ID3(A, S_v_left)
+
+            if len(S_v_right) == 0:
                 # N.child_v <- leaf node with most common label y in S
                 N.children[a_star] = Node(labels_check(S)[1])
                 N.children[a_star].leaf = 1
-            # else
             else:
-                # N.child_v <- ID3(A \ {a*}, S_v)
-                newlist = [attribute for attribute in A if attribute != a_star]
-                # For all the children of the current node, recursively call ID3 with a new list of attributes not
-                # including a* and using the subsection of the data as the input data set
-                N.children["left"] = ID3(newlist, S_v_left)
-                N.children["right"] = ID3(newlist, S_v_right)
+                # TODO We don't remove the attribute for numeric
+                # create children for the right side of the tree
+                N.children["right"] = ID3(A, S_v_right)
     return N
 
 
