@@ -11,8 +11,9 @@ numeric (if False, then we treat them as categorical values)
 import sys
 import numpy as np
 import pandas as pd
-from pptree import *
+import csv
 from copy import copy
+from collections import Counter
 
 class Node:
     def __init__(self, data):
@@ -132,7 +133,6 @@ def threshold_find(data_set, attribute):
         instance_label = instance[0]
         if last_label[0] != instance_label:
             new_value = (float(instance[ind]) + float(last_label[ind])) / 2
-            # new_value = float(last_label[ind]) + difference
             T.append(new_value)
         last_label = instance
     return set(T)
@@ -155,7 +155,6 @@ def infoGain_con_att(data_set, attribute, list_A):
         prob_left = len(left_side_dataset) / len(data_set)
         prob_right = len(right_side_dataset) / len(data_set)
         gain_result = 1 - (prob_left * totalEntropy(left_side_dataset, uniqueLabels) + prob_right * totalEntropy(right_side_dataset, uniqueLabels))
-        # print(f"Information gain: {gain_result}")
         if threshold in dict_threshold.keys():
             if dict_threshold[threshold] < gain_result:
                 dict_threshold[threshold] = gain_result
@@ -167,7 +166,6 @@ def infoGain_con_att(data_set, attribute, list_A):
 # find threshold and info gain for numeric attributes
 # TODO Fix this method to work
 def infoGainNumeric(data_set, attribute, list_A):
-    num_instances = len(data_set)
     data = copy(data_set)
     att_list = copy(list_A)
     att_info = 0.0
@@ -175,9 +173,6 @@ def infoGainNumeric(data_set, attribute, list_A):
     best_attribute = None
     best_threshold = 0
     for attribute in att_list:
-        index_att = attributes.index()
-        list_temp = data[index_att].sort_values(ascending=True)
-        # list_temp = list_temp.sort_values(ascending=True)
         sortedIndex = data[attribute].sort_values(ascending=True).index()
         sortedData = data[attribute][sortedIndex]
         for i in range(0, len(sortedData) - 1):
@@ -201,7 +196,6 @@ def labels_check(S):
             count[inst[0]] += 1
         else:
             count[inst[0]] = 1
-    # N = max(S, key=S.count)
     max_value = max(count, key=count.get)
     if len(count.keys()) == 1:
         return True, max_value
@@ -223,13 +217,11 @@ def ID3(A, S):
         most_common_label = labels_check(S)[1]
         N = Node(most_common_label)
         N.leaf = 1
-        # N.children = None
     # else if all instances in S have the same label y then
     elif labels_check(S)[0]:
         # N <- leaf node with label y
         N = Node(labels_check(S)[1])
         N.leaf = 1
-        # N.children = None
     # else
     else:
         # Iterate through all the attributes which attribute in A produces the best gain
@@ -318,45 +310,8 @@ def printTree(result):
 """
 Prediction Function
 """
-def predict(result, testing_set):
-    tt = 0
-    tf = 0
-    ft = 0
-    ff = 0
-    accuracy = 0
-    for instance in testing_set:
-        instance_label = instance[0]
-        index_att = attributes.index(result.data)
-        current_node = result
-        while current_node.leaf != 1:
-            index_att = attributes.index(current_node.data)
-            current_node = current_node.children[instance[index_att + 1]]
-            print(f"Instance Value: {instance[index_att]}")
-        predict = current_node.data
-        # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
-        if predict == 'yes' and instance_label == 'yes':
-            tt += 1
-        elif predict == 'yes' and instance_label == 'no':
-            ft += 1
-        elif predict == 'no' and instance_label == 'yes':
-            tf += 1
-        else:
-            ff += 1
-        if predict == instance_label:
-            tt += 1
-        elif predict == 'yes' and instance_label == 'no':
-            ft += 1
-        elif predict == 'no' and instance_label == 'yes':
-            tf += 1
-        else:
-            ff += 1
-        accuracy = (tt + ff) / (tt + tf + ft + ff)
-    print(f"Laze Confusion matrix")
-    print("Yes, no")
-    print(f"{tt}, {ft}, yes")
-    print(f"{tf}, {ff}, no")
-    print(f"Accuracy: {accuracy}")
-    return [tt, ft, tf, ff]
+def predict():
+    pass
 
 def predict_numeric(result, test_set):
     tt = 0
@@ -364,46 +319,21 @@ def predict_numeric(result, test_set):
     ft = 0
     ff = 0
     accuracy = 0
-    for instance in testing_set:
-        instance_label = instance[0]
-        # index_att = attributes.index(result.data) + 1
-        current_node = result
-        current_node_threshold = current_node.threshold
-        while current_node.leaf != 1:
-            index_att = attributes.index(current_node.data) + 1
-            if current_node_threshold > instance[index_att]:
-                current_node = current_node.children["right"]
-                current_node_threshold = current_node.threshold
+    # Key is the top
+    results_dict = {x: [] for x in labels}
+    current = result
+    for instance in test_set:
+        while current.leaf != 1:
+            index_att = attributes.index(current.data) + 1
+            if instance[index_att] <= current.threshold:
+                current = current.children["left"]
             else:
-                current_node = current_node.children["left"]
-                current_node_threshold = current_node.threshold
-            print(f"Instance Value: {instance[index_att]}")
-        predict = current_node.data
-        # TODO Make it adaptable for other labels instead of just 'yes' and 'no'
-        if predict == instance_label:
-            tt += 1
-        else:
-            ff += 1
-        # elif predict == 'yes' and instance_label == 'no':
-        #     ft += 1
-        # elif predict == 'no' and instance_label == 'yes':
-        #     tf += 1
-        # else:
-        #     ff += 1
-        # if predict == instance_label:
-        #     tt += 1
-        # elif predict == 'yes' and instance_label == 'no':
-        #     ft += 1
-        # elif predict == 'no' and instance_label == 'yes':
-        #     tf += 1
-        # else:
-        #     ff += 1
-        # accuracy = (tt + ff) / (tt + tf + ft + ff)
-    print(f"Laze Confusion matrix")
-    print("Yes, no")
-    print(f"{tt}, {ft}, yes")
-    print(f"{tf}, {ff}, no")
-    print(f"Accuracy: {accuracy}")
+                current = current.children["right"]
+        predicted_value = current.data
+        results_dict[instance[0]].append(predicted_value)
+        current = result
+
+    a = 5
     return [tt, ft, tf, ff]
 
 
@@ -438,6 +368,8 @@ try:
     # Read in dataset
     df = pd.read_csv(file_path)
 
+    # Get Unique labels for prediction function and confusion matrix
+    labels = df[df.columns[0]].unique()
     if handle_numeric == "True":
         handle_numeric = True
     elif handle_numeric == "False":
