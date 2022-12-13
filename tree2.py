@@ -310,7 +310,7 @@ def printTree(result):
 """
 Prediction Function
 """
-def predict():
+def predict(result, testing_set):
     pass
 
 def predict_numeric(result, test_set):
@@ -332,7 +332,7 @@ def predict_numeric(result, test_set):
         predicted_value = current.data
         results_dict[instance[0]].append(predicted_value)
         current = result
-
+    print("hi")
     a = 5
     return [tt, ft, tf, ff]
 
