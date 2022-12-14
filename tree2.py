@@ -310,8 +310,24 @@ def printTree(result):
 """
 Prediction Function
 """
-def predict(result, testing_set):
-    pass
+def predict(result, test_set):
+    tt = 0
+    tf = 0
+    ft = 0
+    ff = 0
+    accuracy = 0
+    # Key is the top
+    results_dict = {x: [] for x in labels}
+    current = result
+    for instance in test_set:
+        while current.leaf != 1:
+            index_att = attributes.index(current.data) + 1
+            if instance[index_att] == current.data:
+                current = current.children
+        predicted_value = current.data
+        results_dict[instance[0]].append(predicted_value)
+        current = result
+    return [tt,tf,ft,ff]
 
 def predict_numeric(result, test_set):
     tt = 0
@@ -332,7 +348,6 @@ def predict_numeric(result, test_set):
         predicted_value = current.data
         results_dict[instance[0]].append(predicted_value)
         current = result
-    print("hi")
     a = 5
     return [tt, ft, tf, ff]
 
