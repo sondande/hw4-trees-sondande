@@ -15,7 +15,7 @@ For this assignment, we will learn from four pre-defined data sets:
 ## 1) Ada Ates & Sagana Ondande
 ## 2) Research Questions
 
-** Except for question 2, rest of the README questions were answered with the help of scklearn's implementation. For numeric attributes, we are able to build trees, however, we cannot get predictions currently.
+** tree2.py is the main program file to run and readme questions were answered with results from that file.
 1) Pick a single random seed and a single training set percentage (document both in your
 README) and run your program on each of the four data sets. You should pass in True
 as the final parameter to your program to treat all numeric attributes as numeric.
@@ -29,22 +29,158 @@ monks1.csv~
 - confidence interval: n/a
 
 penguins.csv~
-- accuracy: 0.927536231884058
-- confidence interval: [0.8529430292220861, 1.0021294345460299]
+- accuracy: 0.9420289855072463
+- confidence interval: [0.8868886874614639, 0.9971692835530288]
 
 occupancy.csv~
-- accuracy: 0.9888132295719845
-- confidence interval: [0.9848932767067243, 0.9927331824372446]
+- accuracy: 0.9907587548638133
+- confidence interval: [0.9878340723872253, 0.9936834373404012]
 
 opticalDigit.csv~
-- accuracy: 0.8887900355871886
-- confidence interval: [0.8663777480950227, 0.9112023230793546]
+- accuracy: 0.8959074733096085
+- confidence interval: [0.8780543472853466, 0.9137605993338704]
 
 2) Create an image of the tree that your program learned in Question 1 for the monks1.csv
 data set (you can draw by hand and scan your image into a PDF, or you can use a
 drawing program to create an image file). Make sure to upload your image to GitHub.
 
-The drawing of our tree for monks1.csv is uploaded as a PDF file and can be found on GitHub.
+The drawing of our tree for monks1.csv is uploaded as a PDF file and can be found on GitHub. Here is the tree print of our program:
+
+	'jacket_color'=> Threshold: None
+        Branch: blue
+        'body_shape'=> Threshold: None
+            Branch: octagon
+            'head_shape'=> Threshold: None
+                Branch: octagon
+                'yes'=> Threshold: None
+                Branch: round
+                'no'=> Threshold: None
+                Branch: square
+                'no'=> Threshold: None
+            Branch: round
+            'head_shape'=> Threshold: None
+                Branch: octagon
+                'no'=> Threshold: None
+                Branch: round
+                'yes'=> Threshold: None
+                Branch: square
+                'no'=> Threshold: None
+            Branch: square
+            'head_shape'=> Threshold: None
+                Branch: octagon
+                'no'=> Threshold: None
+                Branch: round
+                'no'=> Threshold: None
+                Branch: square
+                'yes'=> Threshold: None
+        Branch: red
+        'yes'=> Threshold: None
+        Branch: yellow
+        'holding'=> Threshold: None
+            Branch: sword
+            'body_shape'=> Threshold: None
+                Branch: octagon
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'yes'=> Threshold: None
+                    Branch: round
+                    'no'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: round
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'yes'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: square
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'no'=> Threshold: None
+                    Branch: square
+                    'yes'=> Threshold: None
+            Branch: balloon
+            'body_shape'=> Threshold: None
+                Branch: octagon
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'yes'=> Threshold: None
+                    Branch: round
+                    'no'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: round
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'yes'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: square
+                'head_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'yes'=> Threshold: None
+                    Branch: square
+                    'yes'=> Threshold: None
+            Branch: flag
+            'head_shape'=> Threshold: None
+                Branch: octagon
+                'body_shape'=> Threshold: None
+                    Branch: octagon
+                    'yes'=> Threshold: None
+                    Branch: round
+                    'no'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: round
+                'body_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'yes'=> Threshold: None
+                    Branch: square
+                    'no'=> Threshold: None
+                Branch: square
+                'body_shape'=> Threshold: None
+                    Branch: octagon
+                    'no'=> Threshold: None
+                    Branch: round
+                    'no'=> Threshold: None
+                    Branch: square
+                    'yes'=> Threshold: None
+        Branch: green
+        'head_shape'=> Threshold: None
+            Branch: octagon
+            'body_shape'=> Threshold: None
+                Branch: octagon
+                'yes'=> Threshold: None
+                Branch: round
+                'no'=> Threshold: None
+                Branch: square
+                'no'=> Threshold: None
+            Branch: round
+            'body_shape'=> Threshold: None
+                Branch: octagon
+                'no'=> Threshold: None
+                Branch: round
+                'yes'=> Threshold: None
+                Branch: square
+                'no'=> Threshold: None
+            Branch: square
+            'body_shape'=> Threshold: None
+                Branch: octagon
+                'no'=> Threshold: None
+                Branch: round
+                'no'=> Threshold: None
+                Branch: square
+                'yes'=> Threshold: None
 
 a. What are the rules learned by the algorithm?
 
@@ -61,16 +197,16 @@ treats each attribute as categorical values (instead of numeric):
 
 a. What is the accuracy you observed?
 
-accuracy: 0.9039145907473309
+accuracy: 0.5160142348754448
 
 b. Calculate a 95% confidence interval around that accuracy
 
-confidence interval:[0.8829055044099341, 0.9249236770847278]
+confidence interval:[0.48679828228334027, 0.5452301874675494]
 
 c. Compare the confidence intervals from your answer to Q1b and Q3b. What do
 you observe? What does this imply?
 
-The accuracy values are not significantly different. This also means that confidence intervals fall within one another. There is a slight change in the boundaries, however it is not significant enough to draw conclusions.
+The accuracy values are significantly different. This also means that confidence intervals do not fall within one another. When opticalDigits is run on categorical values, the accuracy is dropped to 0.51 from 0.89 when it was run on numerical values. This is a significant drop. This means that usual trees, ID3, do not work for this dataset. This implies that this dataset has continuous values that ID3 cannot handle. When it is run with numerical values parameter, i.e. C4.5 or CART unlike ID3, there is significant improvement in accuracy and confidence intervals. This shows that although ID3 fails to do well with continuous values, the improved models of C4.5 and CART fixes this problem with thresholds, creating binary classification via these thresholds, and therefore even classifying continuous attributes.
 
 4) Choose 9 new seeds (document in your README). Rerun your program on
 opticalDigit.csv using these 9 new seeds using both True and False as the final parameter
@@ -79,36 +215,37 @@ to the program.
 Previous seed: 12345
 
 Seeds chosen & accuracy of True and False respectively: 
-- 50:  0.9110320284697508  & 0.9128113879003559
-- 100: 0.8905693950177936   & 0.9065836298932385
-- 250: 0.902135231316726 & 0.8843416370106761
-- 500: 0.9074733096085409 & 0.9083629893238434
-- 750: 0.905693950177936 &  0.905693950177936 
-- 1000: 0.902135231316726 &  0.9039145907473309
-- 2500: 0.8941281138790036 & 0.9039145907473309
-- 5000: 0.9083629893238434 & 0.9119217081850534
-- 10000: 0.8994661921708185 &  0.900355871886121
+- 50:  0.8745551601423488  &  0.5213523131672598
+- 100: 0.8905693950177936   & 0.5249110320284698
+- 250: 0.8879003558718861 & 0.5302491103202847
+- 500: 0.8976868327402135 & 0.5088967971530249
+- 750: 0.895017793594306 &  0.445729537366548
+- 1000: 0.891459074733096 &  0.5284697508896797
+- 2500: 0.8754448398576512 & 0.47419928825622776
+- 5000: 0.9065836298932385 & 0.5409252669039146
+- 10000: 0.9065836298932385 &  0.4581850533807829
 
 a. Calculate the average accuracy across the 10 seeds when you treated the attributes
 as (1) numeric and (2) categorical
 
-Numeric average: 0.9021
+Numeric average: 0.887
 
-Categorical average: 0.9035
+Categorical average: 0.498
 
 b. Did you observe the same trends as in Q3c? That is, if one approach achieved a
 statistically significantly higher accuracy in Q3c, did the same approach achieve a
 higher accuracy when averaged over 10 seeds? If they were not statistically
 significantly different in Q3c, are the averages very close?
 
-The same trends as Q3c were observed, there isn't any significant differences between numerical or categorical attributes when we vary the random seed. The averages are quite close to each other across 10 different random seeds. Although no significant difference, except for random seed 250, categorical attributes resulted in slightly better accuracy values, which can also be observed from 4a. 
+The same trends as Q3c were observed, the numerical value solution performed better accuracies over 10 seeds, there is a statistical significant difference. The averages of 10 seeds between two approaches were not close to each other at all. Numeric average is 0.887 whereas categorical average is 0.498. Numeric handling produces significantly higher accuracies, which fits the implications and conclusion we came to in Q3c.
 
 c. Did these averages fall in your confidence intervals calculated in Q1b and Q3b?
 
-confidence interval: [0.8663777480950227, 0.9112023230793546] from Q1b
-confidence interval: [0.8829055044099341, 0.9249236770847278] from Q3b
+confidence interval: [0.8780543472853466, 0.9137605993338704] from Q1b
 
-The lowest average overall was 0.8843416370106761 with random seed 250 and categorical attributes. Both this lowest observed value and averages of numeric and categorical fall in the confidence intervals calculated in Q1b and Q3b.
+confidence interval: [0.48679828228334027, 0.5452301874675494] from Q3b
+
+The lowest average overall was 0.445729537366548 with random seed 750 and categorical attributes. The second lowest value also comes from categorical attributes with 0.47419928825622776 when random seed was 2500. These two values were very low that they didn't fall into the confidence interval from Q3b. This wasn't the case for numerical attributes as over 10 seeds, the values produced did fall in between the confidence intervals. However, the averages did fall in our confidence intervals.
 
 3) A short paragraph describing your experience during the assignment (what did you enjoy,
 what was difficult, etc.)
@@ -119,7 +256,7 @@ I think trees in general are challenging to understand. I understand the concept
 
 Sagana Ondande~
 
-Trees are the hardest concpet for me personally. I understand all the concepts in terms of how a decision tree makes decisions, how we utilize Gini index and everything we discussed in class. When it came down to implementation of trees, I personally struggled with how to create the recurisive function specifcally related to trees and that overall process. After doing this hw, I feel more comfident in implementing trees in general but also the oveall implementation of decision trees and how to handle numerical and nomial values.
+Trees are the hardest concept for me personally. I understand all the concepts in terms of how a decision tree makes decisions, how we utilize Gini index and everything we discussed in class. When it came down to implementation of trees, I personally struggled with how to create the recursive function specifically related to trees and that overall process. After doing this hw, I feel more confident in implementing trees in general but also the overall implementation of decision trees and how to handle numerical and nominal values.
 
 4) An estimation of how much time you spent on the assignment, and
 
