@@ -14,6 +14,7 @@ import pandas as pd
 import csv
 from copy import copy
 from collections import Counter
+import math
 
 class Node:
     def __init__(self, data):
@@ -311,30 +312,44 @@ def printTree(result):
 Prediction Function
 """
 def predict(result, test_set):
-    tt = 0
-    tf = 0
-    ft = 0
-    ff = 0
-    accuracy = 0
     # Key is the top
     results_dict = {x: [] for x in labels}
     current = result
     for instance in test_set:
         while current.leaf != 1:
             index_att = attributes.index(current.data) + 1
-            if instance[index_att] == current.data:
-                current = current.children
+            instance_value = instance[index_att]
+            current = current.children[instance_value]
         predicted_value = current.data
         results_dict[instance[0]].append(predicted_value)
         current = result
-    return [tt,tf,ft,ff]
+
+    # Write name of the results file
+    outFileName = f"results-tree-{file_path}-{handle_numeric}-{randomSeed}.csv"
+
+    # Writing Section
+    outputFile = open(outFileName, 'w')
+    writer = csv.writer(outputFile)
+
+    # Write Labels Row
+    writer.writerow(uniqueLabels)
+
+    # Create a confusion matrix result
+    confusion_m_result = []
+
+    # Write Columns Row
+    for label in uniqueLabels:
+        confusion_row = []
+        labelCounter = Counter(results_dict[label])
+        for compareLabel in uniqueLabels:
+            confusion_row.append(labelCounter[compareLabel])
+        confusion_row.append(label)
+        confusion_m_result.append(confusion_row)
+        writer.writerow(confusion_row)
+    outputFile.close()
+    return confusion_m_result
 
 def predict_numeric(result, test_set):
-    tt = 0
-    tf = 0
-    ft = 0
-    ff = 0
-    accuracy = 0
     # Key is the top
     results_dict = {x: [] for x in labels}
     current = result
@@ -348,9 +363,65 @@ def predict_numeric(result, test_set):
         predicted_value = current.data
         results_dict[instance[0]].append(predicted_value)
         current = result
-    a = 5
-    return [tt, ft, tf, ff]
 
+    # Write name of the results file
+    outFileName = f"results-tree-{file_path}-{handle_numeric}-{randomSeed}.csv"
+
+    # Writing Section
+    outputFile = open("DecisionTree-results/" + outFileName, 'w')
+    writer = csv.writer(outputFile)
+
+    # Write Labels Row
+    writer.writerow(uniqueLabels)
+
+    # Create a confusion matrix result
+    confusion_m_result = []
+
+    # Write Columns Row
+    for label in uniqueLabels:
+        confusion_row = []
+        labelCounter = Counter(results_dict[label])
+        for compareLabel in uniqueLabels:
+            confusion_row.append(labelCounter[compareLabel])
+        confusion_row.append(label)
+        confusion_m_result.append(confusion_row)
+        writer.writerow(confusion_row)
+    outputFile.close()
+    return confusion_m_result
+
+# print out all the stats from the confusion matrix such as accuracy, recall for each label, and their confidence interval
+def calculateStats(matrix):
+    # calculate accuracy
+    sum_diagnol = 0
+    sum_of_cells = 0
+    for x in range(len(matrix)):
+        for y in range(len(matrix)):
+            value = matrix[x][y]
+            if x == y:
+                sum_diagnol += matrix[x][y]
+            sum_of_cells += matrix[x][y]
+
+    accuracy = sum_diagnol / sum_of_cells
+    print(f"Accuracy: {accuracy}")
+    # calculate recall
+    for recall_x in range(len(matrix)):
+        sum_of_row_y = 0
+        for recall_y in range(len(matrix)):
+            if recall_y == recall_x:
+                cellyy = matrix[recall_x][recall_y]
+            sum_of_row_y +=  matrix[recall_y][recall_x]
+        # Error catching for zero division errr
+        if sum_of_row_y != 0:
+            recall = cellyy / sum_of_row_y
+        else:
+            recall = 0
+        print(f"Recall for {matrix[recall_x][-1]}: {recall}")
+
+    print()
+    # Calculate the confidence interval
+    confidence_interval_positive = accuracy + (1.96 * math.sqrt((accuracy * (1-accuracy))/(len(testing_set))))
+    confidence_interval_negative = accuracy - (1.96 * math.sqrt((accuracy * (1-accuracy))/(len(testing_set))))
+    print(f"Confidence Interval: [{confidence_interval_negative}, {confidence_interval_positive}]")
 
 # Beginning of code
 try:
@@ -450,9 +521,11 @@ try:
     print("attempt 2\n")
     print(str(result))
     if handle_numeric:
-        predict_numeric(result,testing_set)
+        matrix = predict_numeric(result,testing_set)
+        calculateStats(matrix)
     else:
-        predict(result, testing_set)
+        matrix = predict(result, testing_set)
+        calculateStats(matrix)
 except IndexError as e:
     print(f"Error. Message below:\n{e}\nPlease try again.")
     exit(1)

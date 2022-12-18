@@ -119,6 +119,7 @@ I think trees in general are challenging to understand. I understand the concept
 
 Sagana Ondande~
 
+Trees are the hardest concpet for me personally. I understand all the concepts in terms of how a decision tree makes decisions, how we utilize Gini index and everything we discussed in class. When it came down to implementation of trees, I personally struggled with how to create the recurisive function specifcally related to trees and that overall process. After doing this hw, I feel more comfident in implementing trees in general but also the oveall implementation of decision trees and how to handle numerical and nomial values.
 
 4) An estimation of how much time you spent on the assignment, and
 
@@ -127,4 +128,4 @@ For the sake of this question, we'll give an estimate of +25 hours
 
 5) An affirmation that you adhered to the honor code 
 
-We affirm that we have adhered to the Honor Code. Ada Ates & 
+We affirm that we have adhered to the Honor Code. Ada Ates & Sagana Ondande
